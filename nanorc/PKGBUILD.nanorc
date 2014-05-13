@@ -1,0 +1,38 @@
+# Arch PKGBUILD files highlighting
+#
+syntax "pkgbuild" "^.*PKGBUILD(.*\.proto)?$"
+
+# numbers
+color magenta "(^|\s|[[/:|<>(){}=]|\])[-+]?[0-9]+(\.[0-9]+)*%?($|\>)"
+# shell commands & Bash keywords
+icolor red "(^|[;&\|]|\$\(|do|else)\s+[a-z][a-z0-9_-]*"
+color red "(^|[ |&({;/`])(msg2?|cd|echo|enable|exec|export|kill|popd|pushd|read|source|touch|type)\>"
+color red "(^|[ |&({;/`])(case|cat|chmod|chown|convert|cp|diff|do|done|elif|else|esac|exit|fi|find|for|ftp|function|git|grep|gzip|hg|if|in)($|[ |&;])"
+color red "(^|[ |&({;/`])(install|ln|local|make|mkdir|mv|patch|return|rm|sed|select|shift|sleep|snv|tar|then|time|until|unzip|while|yes)($|[ |&;])"
+color brightred "(^|[ |&({;/])(configure|make|cmake|scons)\>"
+# variable definitions
+icolor brightcyan "(^|[;{]|else|do)\s*\<[A-Z_][0-9A-Z_]*="
+color brightblue "(^|[;{]|else|do)\s*\<(pkg(base|name|ver|rel|desc)|epoch|arch|url|license|groups|(make|opt|check)?depends|provides|conflicts|replaces|backup|options|install|changelog|source|noextract|(md5|sha(1|256|384|512))sums)="
+# punctuation & operators
+## color white "(\{|\}|\(|\)|\;|\]|\[|`|\\|\$|<|>|!|=|&|\|| )"
+color white "[=;|&(){}$`]"
+## # punctuation
+## color brightwhite "(\]|[()<>[{},;:=])"
+## color brightwhite "(^|\[|\{|\:)\s*-(\s|$)"
+# functions
+icolor brightyellow "^[0-9A-Z_][0-9A-Z_-]+\s*\(\)"
+color brightgreen "^(build|package)\s*\(\)"
+## # parameters
+## color brightblue "\<(DESTDIR|PREFIX|prefix|sysconfdir|datadir|libdir|includedir|mandir|infodir)\>"
+# strings
+color yellow ""(\\.|[^"])*""
+# variables
+icolor cyan "\$([A-Z0-9_]+|\{#?[0-9A-Z_]+([,^~]{1,2}|([#%/]{1,2}|:?[-+?=])[^\}]*|:[0-9]+(:[0-9]+)?)\})"
+color blue "\$(pkg(base|name|ver|rel|desc)|epoch|arch|url|license|groups|(make|opt|check)?depends|provides|conflicts|replaces|backup|options|install|changelog|source|noextract|(md5|sha(1|256|384|512))sums)\>"
+color blue "\$\{(pkg(base|name|ver|rel|desc)|epoch|arch|url|license|groups|(make|opt|check)?depends|provides|conflicts|replaces|backup|options|install|changelog|source|noextract|(md5|sha(1|256|384|512))sums)\}"
+color blue "\$(src|start|pkg)dir\>"
+color blue "\$\{(src|start|pkg)dir\}"
+# single-quoted strings
+color yellow "'(\\.|[^'])*'"
+# comments
+color brightblack "#.*$"

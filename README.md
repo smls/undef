@@ -1,4 +1,1 @@
-undef
-=====
-
-bits and pieces
+see each subdirectory's README.md
