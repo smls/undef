@@ -66,12 +66,11 @@ exit;
 #------ Grammars ------#
 
 grammar HtmlWithCode {
-    rule TOP { [ .+? [<.comment> || <code> || <.tag>]*]* }
+    rule TOP { [<code> || <.tag> || <.comment> || .+?]* }
     rule code { :i
         '<code' [ <attr> || <-[>]>]* '>'
         [<code> || <tag> || <comment> || $<text>=[.+?]]*?
-        [$ || '</code>']
-    }
+        [$ || '</code>']}
     rule tag { '</'<name> | '<'<name> [ <-[>]>*? <attr> ]* '>'};
     rule attr { <name> '=' [ | $<value>=[<-["'>\s]>+]       # "
                              | \" $<value>=[<-["]>+] \"     # "
