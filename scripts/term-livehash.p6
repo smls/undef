@@ -4,7 +4,7 @@
 # which can print its contents to the terminal and automatically update that
 # print-out in-place when its contents change.
 # 
-# Possibly useful for longer-runnign programs that want to show progress in
+# Possibly useful for longer-running programs that want to show progress in
 # the form of multiple aggregate statistics.
 
 class Term::LiveHash does Associative {
@@ -17,8 +17,8 @@ class Term::LiveHash does Associative {
     
     submethod BUILD {
         # Retrieve terminal codes the first time an instance is created:
-        once ($l-left, $l-up, $l-down, $l-clear) = 
-                (qqx[tput $_] for <cr cuu1 cud1 el>) if !$l-left;
+        once ($l-left, $l-up, $l-down, $l-clear)
+            = (qqx[tput $_] for <cr cuu1 cud1 el>);
     }
     
     method AT-KEY (\key) {
@@ -64,6 +64,8 @@ class Term::LiveHash does Associative {
     }
 }
 
+########## Demo ##########
+
 my %stats := Term::LiveHash.new;
 %stats.show;
 
@@ -78,7 +80,6 @@ for ^100 -> $t {
     
     %stats<bananas> = 3    if $t == 15;
     %stats<bananas> *= 3   if $t >  15 and $t %% 3;
-    
     
     if $t > 0 and $t %% 25 {
         %stats.hide;
