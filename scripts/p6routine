@@ -1,0 +1,106 @@
+#!/usr/bin/env perl6
+
+# A tool for looking up Perl 6 built-in subroutines/operators/methods (with
+# their full signatures), as the interpreter itself sees them.
+# 
+# Takes a single command-line parameter of the form:
+# 
+#  foo      look up subroutine or operator foo
+#  Bar.foo  look up method foo for type Bar
+#  Bar.     list all methods for type Bar
+#  Bar..    list all methods for type Bar, including hidden ones
+#  
+# Screenshot: http://i.imgur.com/JsLU4tf.png 
+
+#| look up a sub or operator ('splice', 'max', '+')
+multi MAIN ($sub where /^ <-[.]>+ $/) {
+    
+    my @subs = ($sub, ("{$_}fix:<$sub>" for <in pre post postcircum>))\
+               .map({ try { ::("&$_") } or next })
+        or error "No such subroutine or operator '$sub'";
+    
+    list-signatures @subs;
+}
+
+#| look up one or all methods of a type ('Str.chomp', 'Str.', 'Str..')
+multi MAIN ($type-dot-method where /^ (<&name>) '.'('.' | <&name>)? $/) {
+    my ($typename, $methname) = @$/>>.Str;
+    
+    my $type = try {
+        CATCH { default { error "No such type '$typename'" } };
+        ::("$0")
+    };
+    
+    my @methods = do given $methname {
+        when !*  { $type.^methods }
+        when '.' { $type.^methods(:all) }
+        default  { $type.^can($methname)
+                   or error "No such method '$methname' for type '$typename'" }
+    };
+    @methods.=grep(?*) or error "No methods found for type '$typename'";
+    
+    list-signatures @methods;
+}
+
+sub list-signatures (*@methods) {
+    my $seen;
+    for @methods {
+        next if .name eq '<anon>';
+        my $keyword = c('keyword', .WHAT.gist.match(/\w+/).lc);
+        my $name = colorize-name(.name);
+        for .candidates {
+            say "$keyword $name {colorize-signature .signature.gist}"
+        }
+        
+    }
+}
+
+my token name { [<alpha>|'_'] <[\w\'-]>* }
+
+sub colorize-name($name) {
+    colorize $name, /| $<keyword>=[ [[in|pre|post|postcircum]fix] ':<' ]
+                       $<routine>=[ .*? ]
+                       $<keyword>=[ '>' ]
+                     | $<routine>=[ .* ]/;    
+}
+
+sub colorize-signature($sig) {
+    my token sigil    { <[$@%&\\]> }
+    my token twigil   { <[!?]> }
+    my token variable { [<.&sigil> <.&twigil>? | '::?' ] <.&name> }
+    my token param    { <.&sigil> <.&name> }
+    my token slurpy   { '*' <.&param> }
+    my token named    { <!after \w> ':' <.&name> }
+    my token typemark { ':' <[DU_]> }
+    my token type     { <.&name> <typemark>? }
+    colorize $sig, /| <slurpy> | <param> | <variable> <type=.&typemark>?
+                    | <named> ['(' <variable> ')']? | <type>/, :g;
+    
+}
+
+sub colorize($str, $regex, *%_) {
+    my $ret = $str;
+    my $match = $str.match($regex, |%_);
+    for $match>>.chunks.flat.reverse {
+        next if .key eq '~';
+        substr-rw($ret, .value.from, .value.chars) = c .key, ~.value
+    }
+    $ret;
+}
+
+sub c ($color, $str) {
+    state %color = bold     => "1",  # bold
+                   error    => "91", # bright red
+                   keyword  => "90", # bright black
+                   routine  => "35", # magenta
+                   param    => "36", # cyan
+                   slurpy   => "96", # bright cyan
+                   named    => "33", # yellow
+                   variable => "94", # bright blue
+                   type     => "31"; # red
+    my $c = %color{$color.gist} or die "Invalid color class '$color'";
+    
+    "\e[{$c}m{$str}\e[0m";
+}
+
+sub error ($msg) { note "$msg."; exit 1 }
