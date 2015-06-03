@@ -1,7 +1,7 @@
 #!/usr/bin/env perl6
 
-# A tool for looking up Perl 6 built-in subroutines/operators/methods (with
-# their full signatures), as the interpreter itself sees them.
+# A tool for looking up Perl 6 subroutines/operators/methods (with their full 
+# signatures), as the interpreter itself sees them.
 # 
 # Takes a single command-line parameter of the form:
 # 
@@ -13,7 +13,7 @@
 # Screenshot: http://i.imgur.com/COmy8Z2.png
 
 #| look up a sub or operator ('splice', 'max', '+')
-multi MAIN ($sub where /^ <-[.]>+ $/) {
+multi MAIN ($sub where /^ [<-[.]>+ | <-[a..z]>+] $/) {
     
     my @subs = ($sub, ("{$_}fix:<$sub>" for <in pre post postcircum>))\
                .map({ (try ::("&$_")) or next })
@@ -23,7 +23,7 @@ multi MAIN ($sub where /^ <-[.]>+ $/) {
 }
 
 #| look up one or all methods of a type ('Str.chomp', 'Str.', 'Str..')
-multi MAIN ($type-dot-method where /^ (<&name>) '.'('.' | <&name>)? $/) {
+multi MAIN ($type-dot-method where /^ (<-[.]>+) '.'('.' | <&name>)? $/) {
     my ($typename, $methname) = @$/>>.Str;
     
     my $type = try {
@@ -42,21 +42,21 @@ multi MAIN ($type-dot-method where /^ (<&name>) '.'('.' | <&name>)? $/) {
     list-signatures @methods;
 }
 
-sub list-signatures (*@methods) {
-    my $seen;
-    for @methods {
+#| Print all candidate signatures for each of the given routines
+sub list-signatures (*@routines) {
+    for @routines {
         next if .name eq '<anon>';
         my $keyword = c('keyword', .WHAT.gist.match(/\w+/).lc);
-        my $name = colorize-name(.name);
+        my $name = colorize-name .name;
         for .candidates {
             say "$keyword $name {colorize-signature .signature.gist}"
         }
-        
     }
 }
 
 my token name { [<alpha>|'_'] <[\w\'-]>* }
 
+#| Colorize a string holding a Perl 6 routine name
 sub colorize-name($name) {
     colorize $name, /| $<keyword>=[ [[in|pre|post|postcircum]fix] ':<' ]
                        $<routine>=[ .*? ]
@@ -64,6 +64,7 @@ sub colorize-name($name) {
                      | $<routine>=[ .* ]/;    
 }
 
+#| Colorize a string holding Perl 6 source code for a routine signature
 sub colorize-signature($sig) {
     my token sigil    { <[$@%&\\]> }
     my token twigil   { <[!?]> }
@@ -78,9 +79,10 @@ sub colorize-signature($sig) {
     
 }
 
+#| Colorize a string based on the top-level named captures of a regex match
 sub colorize($str, $regex, *%_) {
     my $ret = $str;
-    my $match = $str.match($regex, |%_);
+    my $match = $str.match($regex, |%_) or return $str;
     for $match>>.chunks.flat.reverse {
         next if .key eq '~';
         substr-rw($ret, .value.from, .value.chars) = c .key, ~.value
@@ -88,6 +90,7 @@ sub colorize($str, $regex, *%_) {
     $ret;
 }
 
+#| Wrap a string in the ANSI escape sequence pair for a certain color
 sub c ($color, $str) {
     state %color = bold     => "1",  # bold
                    error    => "91", # bright red
