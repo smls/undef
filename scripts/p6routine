@@ -10,13 +10,13 @@
 #  Bar.     list all methods for type Bar
 #  Bar..    list all methods for type Bar, including hidden ones
 #  
-# Screenshot: http://i.imgur.com/JsLU4tf.png 
+# Screenshot: http://i.imgur.com/COmy8Z2.png
 
 #| look up a sub or operator ('splice', 'max', '+')
 multi MAIN ($sub where /^ <-[.]>+ $/) {
     
     my @subs = ($sub, ("{$_}fix:<$sub>" for <in pre post postcircum>))\
-               .map({ try { ::("&$_") } or next })
+               .map({ (try ::("&$_")) or next })
         or error "No such subroutine or operator '$sub'";
     
     list-signatures @subs;
@@ -34,10 +34,10 @@ multi MAIN ($type-dot-method where /^ (<&name>) '.'('.' | <&name>)? $/) {
     my @methods = do given $methname {
         when !*  { $type.^methods }
         when '.' { $type.^methods(:all) }
-        default  { $type.^can($methname)
+        default  { $type.^lookup($methname).grep(?*)
                    or error "No such method '$methname' for type '$typename'" }
     };
-    @methods.=grep(?*) or error "No methods found for type '$typename'";
+    @methods or error "No methods found for type '$typename'";
     
     list-signatures @methods;
 }
