@@ -46,10 +46,14 @@ multi MAIN ($type-dot-method where /^ (<-[.]>+) '.'('.' | <&name>)? $/) {
 sub list-signatures (*@routines) {
     for @routines {
         next if .name eq '<anon>';
-        my $keyword = c('keyword', .WHAT.gist.match(/\w+/).lc);
         my $name = colorize-name .name;
-        for .candidates {
+        if .WHAT ~~ Any {
+            my $keyword = c('keyword', .^name.match(/\w+/).lc);
             say "$keyword $name {colorize-signature .signature.gist}"
+                for .candidates;
+        }
+        else {
+            say "{c 'keyword', "...   "} $name (...)"
         }
     }
 }
