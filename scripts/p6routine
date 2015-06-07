@@ -47,12 +47,13 @@ sub list-signatures (*@routines) {
     for @routines {
         next if .name eq '<anon>';
         my $name = colorize-name .name;
-        if .WHAT ~~ Any {
+        
+        if .WHAT ~~ Any {  # Perl 6 routine
             my $keyword = c('keyword', .^name.match(/\w+/).lc);
             say "$keyword $name {colorize-signature .signature.gist}"
                 for .candidates;
         }
-        else {
+        else {  # NQP routine
             say "{c 'keyword', "...   "} $name (...)"
         }
     }
