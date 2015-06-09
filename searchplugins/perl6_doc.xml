@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
+                       xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>Perl 6 Doc</ShortName>
+  <Description>Perl 6 language documentation (doc.perl6.org)</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image height="16" width="16" type="image/x-icon">https://doc.perl6.org/favicon.ico</Image>
+  <Url type="text/html" method="GET" template="http://encrypted.google.com/search">
+    <Param name="q" value="site:doc.perl6.org+{searchTerms}"/>
+    <Param name="ie" value="utf-8"/>
+    <Param name="oe" value="utf-8"/>
+  </Url>
+  <moz:SearchForm>http://doc.perl6.org/</moz:SearchForm>
+</OpenSearchDescription>
