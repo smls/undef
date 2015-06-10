@@ -4,7 +4,7 @@
   <ShortName>Perl 6 Synopses</ShortName>
   <Description>Perl 6 design documents (design.perl6.org)</Description>
   <InputEncoding>UTF-8</InputEncoding>
-  <Image height="16" width="16" type="image/x-icon">https://perl6.org/favicon.ico</Image>
+  <Image height="16" width="16" type="image/x-icon">http://perl6.org/favicon.ico</Image>
   <Url type="text/html" method="GET" template="http://encrypted.google.com/search">
     <Param name="q" value="site:design.perl6.org+{searchTerms}"/>
     <Param name="ie" value="utf-8"/>

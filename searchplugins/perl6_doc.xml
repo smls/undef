@@ -4,7 +4,7 @@
   <ShortName>Perl 6 Doc</ShortName>
   <Description>Perl 6 language documentation (doc.perl6.org)</Description>
   <InputEncoding>UTF-8</InputEncoding>
-  <Image height="16" width="16" type="image/x-icon">https://doc.perl6.org/favicon.ico</Image>
+  <Image height="16" width="16" type="image/x-icon">http://doc.perl6.org/favicon.ico</Image>
   <Url type="text/html" method="GET" template="http://encrypted.google.com/search">
     <Param name="q" value="site:doc.perl6.org+{searchTerms}"/>
     <Param name="ie" value="utf-8"/>
