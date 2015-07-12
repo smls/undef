@@ -5,7 +5,7 @@
 # Extracts all sections of an ELF binary (as listed by `readelf -S`), and
 # writes each to its own file in the current directory. For example,
 # `splitelf /usr/bin/grep` would create the following 27 files in the
-# current diorectory (listing elided):
+# current directory (listing elided):
 # 
 #     grep.01.interp.bin
 #     grep.02.note.ABI-tag.bin
