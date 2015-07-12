@@ -1,0 +1,122 @@
+#!/usr/bin/env perl
+
+# splitelf <file>
+# 
+# Extracts all sections of an ELF binary (as listed by `readelf -S`), and
+# writes each to its own file in the current directory. For example,
+# `splitelf /usr/bin/grep` would create the following 27 files in the
+# current diorectory (listing elided):
+# 
+#     grep.01.interp.bin
+#     grep.02.note.ABI-tag.bin
+#     ...
+#     grep.13.text.bin
+#     grep.14.fini.bin
+#     grep.15.rodata.bin
+#     ...
+#     grep.24.data.bin
+#     grep.25.bss.bin
+#     grep.26.comment.bin
+#     grep.27.shstrtab.bin
+# 
+# Unlike `objcopy`, this works for *all* sections and does not add
+# zero-byte padding to the front of the output files.
+# 
+# Dependencies: perl, readelf, dd
+# 
+###########################################################################
+
+use strict;
+use warnings;
+no warnings 'void';
+use feature 'say';
+use File::Basename qw(basename);
+
+my $p = TableParser->new(
+    ['[Nr]', qr/^\[\s*(\d+)\s*\]$/],
+    ['Name', qr/^[._][\w.-]+$|^$/ ],
+    ['Type', qr/^[A-Z_]+$/        ],
+    ['Addr', qr/^[0-9a-f]+$/i     ],
+    ['Off',  qr/^[0-9a-f]+$/i     ],
+    ['Size', qr/^[0-9a-f]+$/i     ],
+);
+
+my $path = $ARGV[0];
+die "No file specified.\n" if not defined $path;
+die "No such file '$path'.\n" if not length $path && -f $path;
+my $filename = basename $path;
+
+open my $readelf, '-|', "readelf -SW $path" or die $!;
+
+while (<$readelf>) {
+    
+    $p->parse_header($_) ... !$p->parse_row($_) && last;
+}
+
+my @sections = $p->result;
+
+for (@sections) {
+    my $newname = "$filename." . (sprintf "%02d", $_->{'[Nr]'})
+                               . $_->{Name} . ".bin";
+    die "Error: Target $newname already exists.\n" if -e $newname;
+    $_->{newname} = $newname;
+}
+
+for (@sections) {
+    if (length $_->{Name}) {
+        my @cmd = ("dd", "ibs=1", "if=$path", "of=".$_->{newname},
+                   "skip=".hex($_->{Off}), "count=".hex($_->{Size}));
+        
+        say join " ", @cmd;
+        system @cmd;
+    }
+}
+
+exit;
+
+
+#---- table parser implementation ----#
+
+package TableParser {
+    
+    sub new {
+        my $class = shift;
+        bless {
+            spec => [@_],
+            r_header => qr/^ \s* @{[
+                join " ", map { "(".quotemeta($_->[0])."\\w*\\s*)" } @_
+            ]}(?: |$)/,
+        }, $class;
+    }
+    
+    sub parse_header {
+        my ($self, $line) = @_;
+        if ($line =~ $self->{r_header}) {
+            $self->{r_row} = qr/^@{[
+                "\\s{$-[1]}" . 
+                join " ", map { "(.{".($+[$_] - $-[$_]).",}?)" } 1..$#-
+            ]}(?: |$)/;
+            return 1;
+        }
+        else { return undef }
+    }
+    
+    sub parse_row {
+        my ($self, $line) = @_;
+        if (my @match = $line =~ $self->{r_row}) {
+            my %row;
+            for (0..$#match) {
+                my $value = $match[$_] =~ s/^\s+|\s+$//gr;
+                my ($name, $r_value) = @{$self->{spec}[$_]};
+                die "Error: Unexpected $name value '$value'\n"
+                    if $value !~ $r_value;
+                $row{$name} = $1 // $value;
+            }
+            push @{$self->{data}}, \%row;
+            return 1;
+        }
+        else { return undef }
+    }
+    
+    sub result { @{shift->{data}} }
+}
